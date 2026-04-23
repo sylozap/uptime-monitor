@@ -1,7 +1,7 @@
 [project]
 name = "uptime-monitor"
 version = "0.1.0"
-description = "Add your description here"
+description = "The service that allows you to monitor the availability of your websites "
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -13,9 +13,38 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "mypy>=1.20.2",
     "pre-commit>=4.6.0",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.3.0",
     "ruff>=0.15.11",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+preview = false
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes (logir errors)
+    "I",     # isort 
+    "B",     # flake8-bugbear (frequent errors)
+    "N",     # pep8-naming
+    "UP",    # pyupgrade (modern syntax)
+    "SIM",   # flake8-simplify 
+    "ASYNC", # flake8-async
+    "S",     # flake8-bandit
+
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
 ]
