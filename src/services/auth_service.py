@@ -39,7 +39,7 @@ class AuthService:
         if user is None or not verify_password(password, user.hashed_password):
             raise AuthorizationError(message="Invalid username or password")
 
-        access_token = create_access_token(data={"sub": str(user.id)})
-        refresh_token = create_refresh_token(data={"sub": str(user.id)})
+        access_token = create_access_token(user_id=str(user.id))
+        refresh_token = create_refresh_token(user_id=str(user.id))
 
         return Token(access_token=access_token, refresh_token=refresh_token)
