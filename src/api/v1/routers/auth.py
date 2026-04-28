@@ -1,5 +1,10 @@
-from fastapi import APIRouter, status
+from typing import Annotated
 
+from fastapi import APIRouter, Depends, status
+from fastapi.security import OAuth2PasswordRequestForm
+
+from src.api.dependencies import get_current_user
+from src.schemas.token import Token
 from src.schemas.user import UserIn, UserOut
 from src.services.dependencies import AuthServiceDep
 
@@ -10,3 +15,22 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 async def register_user(user: UserIn, auth_service: AuthServiceDep):
     new_user = await auth_service.register_user(user)
     return new_user
+
+
+@router.post("/login", response_model=Token, status_code=status.HTTP_200_OK)
+async def login_user(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    auth_service: AuthServiceDep,
+):
+
+    return await auth_service.login_user(
+        email=form_data.username,
+        password=form_data.password,
+    )
+
+
+@router.get("/me", response_model=UserOut, status_code=status.HTTP_200_OK)
+async def get_current_user_info(
+    current_user: Annotated[UserOut, Depends(get_current_user)],
+):
+    return current_user
