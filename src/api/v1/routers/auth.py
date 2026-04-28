@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from src.api.dependencies import get_current_user
-from src.schemas.token import Token
+from src.schemas.token import RefreshTokenIn, Token
 from src.schemas.user import UserIn, UserOut
 from src.services.dependencies import AuthServiceDep
 
@@ -34,3 +34,11 @@ async def get_current_user_info(
     current_user: Annotated[UserOut, Depends(get_current_user)],
 ):
     return current_user
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh_token(
+    token_data: RefreshTokenIn,
+    auth_service: AuthServiceDep,
+):
+    return await auth_service.refresh_token(token_data.refresh_token)
