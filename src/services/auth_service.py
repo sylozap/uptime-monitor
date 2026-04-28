@@ -1,7 +1,15 @@
-from src.core.exceptions import AuthorizationError, UserAlreadyExistsError
+import uuid
+
+from src.core.exceptions import (
+    InactiveUserError,
+    InvalidCredentialsError,
+    InvalidRefreshTokenError,
+    UserAlreadyExistsError,
+)
 from src.core.security import (
     create_access_token,
     create_refresh_token,
+    decode_token,
     get_password_hash,
     verify_password,
 )
@@ -22,7 +30,7 @@ class AuthService:
         )
 
         if user_with_existing_email:
-            raise UserAlreadyExistsError(message="User with this email already exists")
+            raise UserAlreadyExistsError()
 
         hashed_password = get_password_hash(user.password)
 
@@ -37,9 +45,39 @@ class AuthService:
         normalized_email = email.lower()
         user = await self.user_repository.get_by_email(normalized_email)
         if user is None or not verify_password(password, user.hashed_password):
-            raise AuthorizationError(message="Invalid username or password")
+            raise InvalidCredentialsError()
+
+        if not user.is_active:
+            raise InactiveUserError()
 
         access_token = create_access_token(user_id=str(user.id))
         refresh_token = create_refresh_token(user_id=str(user.id))
 
         return Token(access_token=access_token, refresh_token=refresh_token)
+
+    async def refresh_token(self, refresh_token: str) -> Token:
+        payload: dict | None = decode_token(refresh_token)
+
+        if payload is None:
+            raise InvalidRefreshTokenError()
+
+        if payload.get("type") != "refresh":
+            raise InvalidRefreshTokenError()
+
+        user_id = payload.get("sub")
+
+        if user_id is None:
+            raise InvalidRefreshTokenError()
+
+        user = await self.user_repository.get_by_id(uuid.UUID(user_id))
+
+        if user is None:
+            raise InvalidRefreshTokenError()
+
+        if not user.is_active:
+            raise InactiveUserError()
+
+        return Token(
+            access_token=create_access_token(user_id=str(user.id)),
+            refresh_token=create_refresh_token(user_id=str(user.id)),
+        )
