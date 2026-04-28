@@ -5,3 +5,7 @@ class BaseAppError(Exception):
 
 class UserAlreadyExistsError(BaseAppError):
     pass
+
+
+class AuthorizationError(BaseAppError):
+    pass
