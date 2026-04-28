@@ -1,6 +1,12 @@
-from src.core.exceptions import UserAlreadyExistsError
-from src.core.security import get_password_hash
+from src.core.exceptions import AuthorizationError, UserAlreadyExistsError
+from src.core.security import (
+    create_access_token,
+    create_refresh_token,
+    get_password_hash,
+    verify_password,
+)
 from src.repositories.user_repository import UserRepository
+from src.schemas.token import Token
 from src.schemas.user import UserIn
 
 
@@ -26,3 +32,14 @@ class AuthService:
         )
 
         return new_user
+
+    async def login_user(self, email: str, password: str) -> Token:
+        normalized_email = email.lower()
+        user = await self.user_repository.get_by_email(normalized_email)
+        if user is None or not verify_password(password, user.hashed_password):
+            raise AuthorizationError(message="Invalid username or password")
+
+        access_token = create_access_token(data={"sub": str(user.id)})
+        refresh_token = create_refresh_token(data={"sub": str(user.id)})
+
+        return Token(access_token=access_token, refresh_token=refresh_token)
