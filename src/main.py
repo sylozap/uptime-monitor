@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from src.api.router import api_router
-from src.core.exceptions import UserAlreadyExistsError
+from src.core.exceptions import AuthorizationError, UserAlreadyExistsError
 
 app = FastAPI()
 
@@ -15,4 +15,11 @@ async def user_already_exists_exception_handler(
 ):
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT, content={"message": exc.message}
+    )
+
+
+@app.exception_handler(AuthorizationError)
+async def authorization_exception_handler(request: Request, exc: AuthorizationError):
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED, content={"message": exc.message}
     )
