@@ -1,8 +1,8 @@
-"""Initial revision
+"""initial_migration
 
-Revision ID: 5b59134e8fd8
+Revision ID: d2ae86683076
 Revises:
-Create Date: 2026-04-26 23:38:57.792906
+Create Date: 2026-04-29 11:14:45.743393
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "5b59134e8fd8"
+revision: str = "d2ae86683076"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -37,8 +37,8 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("email"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_users")),
+        sa.UniqueConstraint("email", name=op.f("uq_users_email")),
     )
     op.create_table(
         "monitors",
@@ -68,10 +68,9 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.ForeignKeyConstraint(
-            ["user_id"],
-            ["users.id"],
+            ["user_id"], ["users.id"], name=op.f("fk_monitors_user_id_users")
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_monitors")),
     )
     op.create_table(
         "checklogs",
@@ -89,8 +88,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["monitor_id"],
             ["monitors.id"],
+            name=op.f("fk_checklogs_monitor_id_monitors"),
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_checklogs")),
     )
     op.create_table(
         "incidents",
@@ -104,8 +104,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["monitor_id"],
             ["monitors.id"],
+            name=op.f("fk_incidents_monitor_id_monitors"),
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_incidents")),
     )
     # ### end Alembic commands ###
 
