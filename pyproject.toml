@@ -46,6 +46,9 @@ select = [
 
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
 section-order = [
