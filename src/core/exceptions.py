@@ -13,6 +13,8 @@ class BaseAppError(Exception):
         if code is not None:
             self.code = code
 
+        super().__init__(self.message)
+
 
 class UserAlreadyExistsError(BaseAppError):
     status_code = status.HTTP_409_CONFLICT
