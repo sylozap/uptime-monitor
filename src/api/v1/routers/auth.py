@@ -36,7 +36,7 @@ async def get_current_user_info(
     return current_user
 
 
-@router.post("/refresh", response_model=Token)
+@router.post("/refresh", response_model=Token, status_code=status.HTTP_200_OK)
 async def refresh_token(
     token_data: RefreshTokenIn,
     auth_service: AuthServiceDep,
