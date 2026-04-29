@@ -1,7 +1,6 @@
 services:
   postgres_test:
     image: postgres:17
-    container_name: postgres_test_container
     environment:
       POSTGRES_USER: ${POSTGRES_TEST_USER}
       POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD}
