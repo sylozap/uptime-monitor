@@ -1,4 +1,4 @@
-import uuid
+from sqlalchemy.exc import IntegrityError
 
 from src.core.exceptions import (
     InactiveUserError,
@@ -13,6 +13,7 @@ from src.core.security import (
     get_password_hash,
     verify_password,
 )
+from src.core.utils import parse_access_token_user_id
 from src.repositories.user_repository import UserRepository
 from src.schemas.token import Token
 from src.schemas.user import UserIn
@@ -33,11 +34,13 @@ class AuthService:
             raise UserAlreadyExistsError()
 
         hashed_password = get_password_hash(user.password)
-
-        new_user = await self.user_repository.create_user(
-            email=normalized_email,
-            hashed_password=hashed_password,
-        )
+        try:
+            new_user = await self.user_repository.create_user(
+                email=normalized_email,
+                hashed_password=hashed_password,
+            )
+        except IntegrityError as exc:
+            raise UserAlreadyExistsError() from exc
 
         return new_user
 
@@ -69,7 +72,7 @@ class AuthService:
         if user_id is None:
             raise InvalidRefreshTokenError()
 
-        user = await self.user_repository.get_by_id(uuid.UUID(user_id))
+        user = await self.user_repository.get_by_id(parse_access_token_user_id(user_id))
 
         if user is None:
             raise InvalidRefreshTokenError()
