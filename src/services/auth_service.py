@@ -13,7 +13,7 @@ from src.core.security import (
     get_password_hash,
     verify_password,
 )
-from src.core.utils import parse_access_token_user_id
+from src.core.utils import parse_uuid
 from src.repositories.user_repository import UserRepository
 from src.schemas.token import Token
 from src.schemas.user import UserIn
@@ -72,7 +72,7 @@ class AuthService:
         if user_id is None:
             raise InvalidRefreshTokenError()
 
-        user = await self.user_repository.get_by_id(parse_access_token_user_id(user_id))
+        user = await self.user_repository.get_by_id(parse_uuid(user_id))
 
         if user is None:
             raise InvalidRefreshTokenError()

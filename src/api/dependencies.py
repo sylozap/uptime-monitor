@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from src.core.exceptions import InactiveUserError, InvalidTokenError
 from src.core.security import decode_token
-from src.core.utils import parse_access_token_user_id
+from src.core.utils import parse_uuid
 from src.models.user import User
 from src.repositories.dependencies import get_user_repository
 from src.repositories.user_repository import UserRepository
@@ -31,7 +31,7 @@ async def get_current_user(
     if user_id is None:
         raise InvalidTokenError()
 
-    user = await user_repository.get_by_id(parse_access_token_user_id(user_id))
+    user = await user_repository.get_by_id(parse_uuid(user_id))
 
     if user is None:
         raise InvalidTokenError()
