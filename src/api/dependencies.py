@@ -31,7 +31,7 @@ async def get_current_user(
     if user_id is None:
         raise InvalidTokenError()
 
-    user = await user_repository.get_by_id(parse_uuid(user_id))
+    user = await user_repository.get_by_id(parse_uuid(user_id, InvalidTokenError))
 
     if user is None:
         raise InvalidTokenError()

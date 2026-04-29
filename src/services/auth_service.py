@@ -73,7 +73,9 @@ class AuthService:
         if user_id is None:
             raise InvalidRefreshTokenError()
 
-        user = await self.user_repository.get_by_id(parse_uuid(user_id))
+        user = await self.user_repository.get_by_id(
+            parse_uuid(user_id, InvalidRefreshTokenError)
+        )
 
         if user is None:
             raise InvalidRefreshTokenError()
