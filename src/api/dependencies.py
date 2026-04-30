@@ -7,7 +7,7 @@ from src.core.exceptions import InactiveUserError, InvalidTokenError
 from src.core.security import decode_token
 from src.core.utils import parse_uuid
 from src.models.user import User
-from src.repositories.dependencies import get_user_repository
+from src.repositories.dependencies import UserRepositoryDep
 from src.repositories.user_repository import UserRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -15,7 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
-    user_repository: Annotated[UserRepository, Depends(get_user_repository)],
+    user_repository: UserRepositoryDep,
 ) -> User:
 
     payload = decode_token(token)
