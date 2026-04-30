@@ -11,7 +11,7 @@ from src.models import User
 async def register_user(
     client: AsyncClient,
     email: str = "user@example.com",
-    password: str = "secret123",  # noqa: S107
+    password: str = "secret123",
 ) -> dict[str, Any]:
     response = await client.post(
         "/api/v1/auth/register",
