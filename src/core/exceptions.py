@@ -46,15 +46,3 @@ class InactiveUserError(BaseAppError):
     status_code = status.HTTP_403_FORBIDDEN
     message = "User account is inactive"
     code = "inactive_user"
-
-
-class UserNotFoundError(BaseAppError):
-    status_code = status.HTTP_404_NOT_FOUND
-    message = "User not found"
-    code = "user_not_found"
-
-
-class PermissionDeniedError(BaseAppError):
-    status_code = status.HTTP_403_FORBIDDEN
-    message = "You do not have permission to access this resource"
-    code = "permission_denied"
