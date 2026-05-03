@@ -5,14 +5,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from src.api.dependencies import CurrentUserDep
 from src.schemas.token import RefreshTokenIn, Token
-from src.schemas.user import UserIn, UserOut
+from src.schemas.user import UserCreate, UserResponse
 from src.services.dependencies import AuthServiceDep
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-async def register_user(user: UserIn, auth_service: AuthServiceDep):
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
+async def register_user(user: UserCreate, auth_service: AuthServiceDep):
     new_user = await auth_service.register_user(user)
     return new_user
 
@@ -29,7 +31,7 @@ async def login_user(
     )
 
 
-@router.get("/me", response_model=UserOut, status_code=status.HTTP_200_OK)
+@router.get("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
 async def get_current_user_info(
     current_user: CurrentUserDep,
 ):

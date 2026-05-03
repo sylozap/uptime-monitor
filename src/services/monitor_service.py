@@ -3,14 +3,16 @@ import uuid
 from src.core.exceptions import MonitorNotFoundError
 from src.models.monitor import Monitor
 from src.repositories.monitor_repository import MonitorRepository
-from src.schemas.monitor import MonitorFilterParams, MonitorIn, MonitorUpdate
+from src.schemas.monitor import MonitorCreate, MonitorFilterParams, MonitorUpdate
 
 
 class MonitorService:
     def __init__(self, monitor_repository: MonitorRepository) -> None:
         self.monitor_repository = monitor_repository
 
-    async def create_monitor(self, user_id: uuid.UUID, monitor: MonitorIn) -> Monitor:
+    async def create_monitor(
+        self, user_id: uuid.UUID, monitor: MonitorCreate
+    ) -> Monitor:
         new_monitor = await self.monitor_repository.create_monitor(
             user_id=user_id, monitor=monitor
         )

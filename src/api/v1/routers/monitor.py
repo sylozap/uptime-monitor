@@ -5,9 +5,9 @@ from fastapi import APIRouter, Path, Query, status
 
 from src.api.dependencies import CurrentUserDep
 from src.schemas.monitor import (
+    MonitorCreate,
     MonitorFilterParams,
-    MonitorIn,
-    MonitorOut,
+    MonitorResponse,
     MonitorUpdate,
 )
 from src.services.dependencies import MonitorServiceDep
@@ -15,9 +15,11 @@ from src.services.dependencies import MonitorServiceDep
 router = APIRouter(prefix="/monitors", tags=["Monitors"])
 
 
-@router.post("/", response_model=MonitorOut, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=MonitorResponse, status_code=status.HTTP_201_CREATED)
 async def create_monitor(
-    monitor: MonitorIn, monitor_service: MonitorServiceDep, current_user: CurrentUserDep
+    monitor: MonitorCreate,
+    monitor_service: MonitorServiceDep,
+    current_user: CurrentUserDep,
 ):
     new_monitor = await monitor_service.create_monitor(
         user_id=current_user.id, monitor=monitor
@@ -25,7 +27,7 @@ async def create_monitor(
     return new_monitor
 
 
-@router.get("/", response_model=list[MonitorOut], status_code=status.HTTP_200_OK)
+@router.get("/", response_model=list[MonitorResponse], status_code=status.HTTP_200_OK)
 async def get_monitors(
     filter_query: Annotated[MonitorFilterParams, Query()],
     monitor_service: MonitorServiceDep,
@@ -38,7 +40,7 @@ async def get_monitors(
     return monitors
 
 
-@router.get("/{id}", response_model=MonitorOut, status_code=status.HTTP_200_OK)
+@router.get("/{id}", response_model=MonitorResponse, status_code=status.HTTP_200_OK)
 async def get_monitor_by_id(
     id: Annotated[uuid.UUID, Path()],
     current_user: CurrentUserDep,
@@ -49,7 +51,7 @@ async def get_monitor_by_id(
     return monitor
 
 
-@router.patch("/{id}", response_model=MonitorOut, status_code=status.HTTP_200_OK)
+@router.patch("/{id}", response_model=MonitorResponse, status_code=status.HTTP_200_OK)
 async def update_monitor(
     id: Annotated[uuid.UUID, Path()],
     current_user: CurrentUserDep,

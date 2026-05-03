@@ -4,12 +4,12 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
-class BaseMonitor(BaseModel):
+class MonitorBase(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra="forbid")
     name: str = Field(min_length=1, max_length=255)
 
 
-class MonitorIn(BaseMonitor):
+class MonitorCreate(MonitorBase):
     url: HttpUrl = Field(max_length=2048)
     check_interval: int = Field(default=60, ge=1, le=86400)
     timeout: int = Field(default=10, ge=1, le=60)
@@ -27,7 +27,7 @@ class MonitorUpdate(BaseModel):
     is_active: bool | None = None
 
 
-class MonitorOut(BaseMonitor):
+class MonitorResponse(MonitorBase):
     id: uuid.UUID
     user_id: uuid.UUID
     url: HttpUrl

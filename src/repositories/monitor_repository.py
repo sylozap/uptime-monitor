@@ -5,14 +5,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.monitor import Monitor
-from src.schemas.monitor import MonitorFilterParams, MonitorIn
+from src.schemas.monitor import MonitorCreate, MonitorFilterParams
 
 
 class MonitorRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def create_monitor(self, user_id: uuid.UUID, monitor: MonitorIn) -> Monitor:
+    async def create_monitor(
+        self, user_id: uuid.UUID, monitor: MonitorCreate
+    ) -> Monitor:
 
         db_monitor = Monitor(user_id=user_id, **monitor.model_dump(mode="json"))
 
