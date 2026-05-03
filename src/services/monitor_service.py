@@ -26,9 +26,7 @@ class MonitorService:
 
         return monitors
 
-    async def get_monitor_by_id(
-        self, id: uuid.UUID, user_id: uuid.UUID
-    ) -> Monitor | None:
+    async def get_monitor_by_id(self, id: uuid.UUID, user_id: uuid.UUID) -> Monitor:
 
         monitor = await self.monitor_repository.get_monitor_by_id(
             id=id, user_id=user_id
@@ -41,7 +39,7 @@ class MonitorService:
 
     async def update_monitor(
         self, id: uuid.UUID, user_id: uuid.UUID, fields_to_update: MonitorUpdate
-    ):
+    ) -> Monitor:
         monitor = await self.monitor_repository.get_monitor_by_id(
             id=id, user_id=user_id
         )
