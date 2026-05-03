@@ -25,18 +25,15 @@ class MonitorRepository:
         return db_monitor
 
     async def get_monitors(
-        self, user_id: uuid.UUID, filter_query: MonitorFilterParams
+        self, user_id: uuid.UUID, filters: MonitorFilterParams
     ) -> list[Monitor]:
-
-        limit = filter_query.limit
-        offset = filter_query.offset
 
         query = (
             select(Monitor)
             .where(Monitor.user_id == user_id)
             .order_by(Monitor.created_at, Monitor.id)
-            .limit(limit)
-            .offset(offset)
+            .limit(filters.limit)
+            .offset(filters.offset)
         )
 
         result = await self.session.execute(query)

@@ -19,11 +19,11 @@ class MonitorService:
         return new_monitor
 
     async def get_monitors(
-        self, user_id: uuid.UUID, filter_query: MonitorFilterParams
+        self, user_id: uuid.UUID, filters: MonitorFilterParams
     ) -> list[Monitor]:
 
         monitors = await self.monitor_repository.get_monitors(
-            user_id=user_id, filter_query=filter_query
+            user_id=user_id, filters=filters
         )
 
         return monitors
@@ -60,11 +60,11 @@ class MonitorService:
         return updated_monitor
 
     async def delete_monitor(self, id: uuid.UUID, user_id: uuid.UUID) -> None:
-        monitor_to_delete = await self.monitor_repository.get_monitor_by_id(
+        monitor = await self.monitor_repository.get_monitor_by_id(
             id=id, user_id=user_id
         )
 
-        if not monitor_to_delete:
+        if not monitor:
             raise MonitorNotFoundError()
 
-        await self.monitor_repository.delete_monitor(monitor=monitor_to_delete)
+        await self.monitor_repository.delete_monitor(monitor=monitor)

@@ -8,7 +8,6 @@ from src.core.security import decode_token
 from src.core.utils import parse_uuid
 from src.models.user import User
 from src.repositories.dependencies import UserRepositoryDep
-from src.repositories.user_repository import UserRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 

@@ -1,7 +1,7 @@
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase, declared_attr
 
-convention = {
+NAMING_CONVENTION = {
     "ix": "ix_%(table_name)s_%(column_0_name)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
     "ck": "ck_%(table_name)s_%(constraint_name)s",
@@ -11,7 +11,7 @@ convention = {
 
 
 class Base(DeclarativeBase):
-    metadata = MetaData(naming_convention=convention)
+    metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
     @declared_attr.directive
     def __tablename__(cls) -> str:  # noqa
