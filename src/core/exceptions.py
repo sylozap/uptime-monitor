@@ -51,4 +51,4 @@ class InactiveUserError(BaseAppError):
 class MonitorNotFoundError(BaseAppError):
     status_code = status.HTTP_404_NOT_FOUND
     message = "Monitor not found"
-    code = "monitor_not_founf"
+    code = "monitor_not_found"
