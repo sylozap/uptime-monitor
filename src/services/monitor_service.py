@@ -2,7 +2,7 @@ import uuid
 
 from src.models.monitor import Monitor
 from src.repositories.monitor_repository import MonitorRepository
-from src.schemas.monitor import MonitorIn
+from src.schemas.monitor import MonitorFilterParams, MonitorIn
 
 
 class MonitorService:
@@ -14,3 +14,13 @@ class MonitorService:
             user_id=user_id, monitor=monitor
         )
         return new_monitor
+
+    async def get_monitors(
+        self, user_id: uuid.UUID, filter_query: MonitorFilterParams
+    ) -> list[Monitor]:
+
+        monitors = await self.monitor_repository.get_monitors(
+            user_id=user_id, filter_query=filter_query
+        )
+
+        return monitors

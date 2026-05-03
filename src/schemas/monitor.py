@@ -42,3 +42,9 @@ class MonitorOut(BaseMonitor):
 
     created_at: datetime
     updated_at: datetime
+
+
+class MonitorFilterParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    limit: int = Field(ge=1, le=100, default=10)
+    offset: int = Field(ge=0, default=0)

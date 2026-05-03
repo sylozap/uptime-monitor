@@ -1,7 +1,9 @@
-from fastapi import APIRouter, status
+from typing import Annotated
+
+from fastapi import APIRouter, Query, status
 
 from src.api.dependencies import CurrentUserDep
-from src.schemas.monitor import MonitorIn, MonitorOut
+from src.schemas.monitor import MonitorFilterParams, MonitorIn, MonitorOut
 from src.services.dependencies import MonitorServiceDep
 
 router = APIRouter(prefix="/monitors", tags=["Monitors"])
@@ -15,3 +17,16 @@ async def create_monitor(
         user_id=current_user.id, monitor=monitor
     )
     return new_monitor
+
+
+@router.get("/", response_model=list[MonitorOut], status_code=status.HTTP_200_OK)
+async def get_monitors(
+    filter_query: Annotated[MonitorFilterParams, Query()],
+    monitor_service: MonitorServiceDep,
+    current_user: CurrentUserDep,
+):
+    monitors = await monitor_service.get_monitors(
+        user_id=current_user.id, filter_query=filter_query
+    )
+
+    return monitors

@@ -1,9 +1,10 @@
 import uuid
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.monitor import Monitor
-from src.schemas.monitor import MonitorIn
+from src.schemas.monitor import MonitorFilterParams, MonitorIn
 
 
 class MonitorRepository:
@@ -19,3 +20,22 @@ class MonitorRepository:
         await self.session.refresh(db_monitor)
 
         return db_monitor
+
+    async def get_monitors(
+        self, user_id: uuid.UUID, filter_query: MonitorFilterParams
+    ) -> list[Monitor]:
+
+        limit = filter_query.limit
+        offset = filter_query.offset
+
+        query = (
+            select(Monitor)
+            .where(Monitor.user_id == user_id)
+            .order_by(Monitor.id)
+            .limit(limit)
+            .offset(offset)
+        )
+
+        result = await self.session.execute(query)
+
+        return list(result.scalars().all())
