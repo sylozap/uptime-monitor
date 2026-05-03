@@ -32,7 +32,7 @@ class MonitorRepository:
         query = (
             select(Monitor)
             .where(Monitor.user_id == user_id)
-            .order_by(Monitor.id)
+            .order_by(Monitor.created_at, Monitor.id)
             .limit(limit)
             .offset(offset)
         )
