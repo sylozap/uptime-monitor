@@ -17,7 +17,7 @@ class Incident(Base):
         primary_key=True, server_default=text("gen_random_uuid()")
     )
     monitor_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("monitors.id"), nullable=False
+        ForeignKey("monitors.id", ondelete="CASCADE"), nullable=False
     )
     start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_at: Mapped[datetime | None] = mapped_column(

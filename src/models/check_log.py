@@ -15,7 +15,7 @@ class CheckLog(Base):
     # Columns
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     monitor_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("monitors.id"), nullable=False
+        ForeignKey("monitors.id", ondelete="CASCADE"), nullable=False
     )
     response_time: Mapped[int] = mapped_column(nullable=False)
     status_code: Mapped[int] = mapped_column()
