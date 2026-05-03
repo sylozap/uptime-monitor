@@ -39,3 +39,11 @@ class MonitorRepository:
         result = await self.session.execute(query)
 
         return list(result.scalars().all())
+
+    async def get_monitor_by_id(
+        self, id: uuid.UUID, user_id: uuid.UUID
+    ) -> Monitor | None:
+        query = select(Monitor).where(Monitor.id == id, Monitor.user_id == user_id)
+        result = await self.session.execute(query)
+
+        return result.scalar_one_or_none()

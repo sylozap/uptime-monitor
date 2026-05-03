@@ -1,6 +1,7 @@
+import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Path, Query, status
 
 from src.api.dependencies import CurrentUserDep
 from src.schemas.monitor import MonitorFilterParams, MonitorIn, MonitorOut
@@ -30,3 +31,14 @@ async def get_monitors(
     )
 
     return monitors
+
+
+@router.get("/{id}", response_model=MonitorOut, status_code=status.HTTP_200_OK)
+async def get_monitor_by_id(
+    id: Annotated[uuid.UUID, Path()],
+    current_user: CurrentUserDep,
+    monitor_service: MonitorServiceDep,
+):
+    monitor = await monitor_service.get_monitor_by_id(id=id, user_id=current_user.id)
+
+    return monitor

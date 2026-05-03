@@ -1,5 +1,6 @@
 import uuid
 
+from src.core.exceptions import MonitorNotFoundError
 from src.models.monitor import Monitor
 from src.repositories.monitor_repository import MonitorRepository
 from src.schemas.monitor import MonitorFilterParams, MonitorIn
@@ -24,3 +25,16 @@ class MonitorService:
         )
 
         return monitors
+
+    async def get_monitor_by_id(
+        self, id: uuid.UUID, user_id: uuid.UUID
+    ) -> Monitor | None:
+
+        monitor = await self.monitor_repository.get_monitor_by_id(
+            id=id, user_id=user_id
+        )
+
+        if monitor is None:
+            raise MonitorNotFoundError()
+
+        return monitor

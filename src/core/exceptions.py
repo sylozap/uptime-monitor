@@ -46,3 +46,9 @@ class InactiveUserError(BaseAppError):
     status_code = status.HTTP_403_FORBIDDEN
     message = "User account is inactive"
     code = "inactive_user"
+
+
+class MonitorNotFoundError(BaseAppError):
+    status_code = status.HTTP_404_NOT_FOUND
+    message = "Monitor not found"
+    code = "monitor_not_founf"
