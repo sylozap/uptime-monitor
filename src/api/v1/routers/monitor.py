@@ -61,3 +61,12 @@ async def update_monitor(
     )
 
     return updated_monitor
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_monitor(
+    id: Annotated[uuid.UUID, Path()],
+    current_user: CurrentUserDep,
+    monitor_service: MonitorServiceDep,
+) -> None:
+    await monitor_service.delete_monitor(id=id, user_id=current_user.id)

@@ -58,3 +58,13 @@ class MonitorService:
         )
 
         return updated_monitor
+
+    async def delete_monitor(self, id: uuid.UUID, user_id: uuid.UUID) -> None:
+        monitor_to_delete = await self.monitor_repository.get_monitor_by_id(
+            id=id, user_id=user_id
+        )
+
+        if not monitor_to_delete:
+            raise MonitorNotFoundError()
+
+        await self.monitor_repository.delete_monitor(monitor=monitor_to_delete)

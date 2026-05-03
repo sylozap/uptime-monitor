@@ -58,3 +58,7 @@ class MonitorRepository:
         await self.session.commit()
         await self.session.refresh(monitor)
         return monitor
+
+    async def delete_monitor(self, monitor: Monitor) -> None:
+        await self.session.delete(monitor)
+        await self.session.commit()
