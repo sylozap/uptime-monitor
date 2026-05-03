@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,3 +48,13 @@ class MonitorRepository:
         result = await self.session.execute(query)
 
         return result.scalar_one_or_none()
+
+    async def update_monitor(
+        self, monitor: Monitor, update_data: dict[str, Any]
+    ) -> Monitor:
+        for key, value in update_data.items():
+            setattr(monitor, key, value)
+
+        await self.session.commit()
+        await self.session.refresh(monitor)
+        return monitor
