@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase, declared_attr
 
@@ -15,4 +17,6 @@ class Base(DeclarativeBase):
 
     @declared_attr.directive
     def __tablename__(cls) -> str:  # noqa
-        return cls.__name__.lower() + "s"
+        name = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", cls.__name__)
+        name = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", name)
+        return name.lower() + "s"
