@@ -19,8 +19,10 @@ class Incident(Base):
     monitor_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("monitors.id", ondelete="CASCADE"), nullable=False
     )
-    start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    end_at: Mapped[datetime | None] = mapped_column(
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    ended_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     error_type: Mapped[str] = mapped_column(String(255), nullable=False)
