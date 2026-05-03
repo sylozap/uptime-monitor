@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from src.database.dependencies import get_db
+from src.database.dependencies import get_session
 from src.main import app
 from src.models import Base
 from src.services import auth_service
@@ -64,10 +64,10 @@ async def db_session() -> AsyncGenerator[AsyncSession]:
 
 @pytest_asyncio.fixture()
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient]:
-    async def override_get_db() -> AsyncGenerator[AsyncSession]:
+    async def override_get_session() -> AsyncGenerator[AsyncSession]:
         yield db_session
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_session] = override_get_session
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
