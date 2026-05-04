@@ -17,14 +17,14 @@ from src.core.utils import parse_uuid
 from src.models import User
 from src.repositories.user_repository import UserRepository
 from src.schemas.token import Token
-from src.schemas.user import UserIn
+from src.schemas.user import UserCreate
 
 
 class AuthService:
     def __init__(self, user_repository: UserRepository) -> None:
         self.user_repository = user_repository
 
-    async def register_user(self, user: UserIn) -> User:
+    async def register_user(self, user: UserCreate) -> User:
         normalized_email = user.email.lower()
 
         user_with_existing_email = await self.user_repository.get_by_email(
