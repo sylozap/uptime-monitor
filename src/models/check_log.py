@@ -19,7 +19,7 @@ class CheckLog(Base):
     )
     response_time: Mapped[int] = mapped_column(nullable=False)
     status_code: Mapped[int] = mapped_column()
-    is_available: Mapped[bool] = mapped_column(nullable=False)
+    is_available: Mapped[bool] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
