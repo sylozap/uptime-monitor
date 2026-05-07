@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_PORT: int
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_PASSWORD: str
+
     DEBUG: bool = True
 
     model_config = SettingsConfigDict(
@@ -26,6 +30,14 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self) -> str:  # noqa
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
+    @property
+    def CELERY_BROKER_URL(self) -> str:  # noqa
+        return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/0"
+
+    @property
+    def CELERY_RESULT_BACKEND(self) -> str:  # noqa
+        return self.CELERY_BROKER_URL
 
 
 settings = Settings()  # type: ignore
