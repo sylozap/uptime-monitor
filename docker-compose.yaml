@@ -15,14 +15,25 @@ services:
   worker:
     build: .
     container_name: celery_worker
-    command: celery -A src.celery.app worker --loglevel=info
+    command: celery -A src.celery.app:app worker --loglevel=info
     depends_on:
       - postgres
       - redis
     env_file:
       - .env
     restart: unless-stopped
-    
+
+  beat:
+    build: .
+    container_name: celery_beat
+    command: celery -A src.celery.app:app beat --loglevel=info
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    restart: unless-stopped
+
   postgres:
     image: postgres:17
     container_name: postgres_container
