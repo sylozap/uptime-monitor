@@ -19,5 +19,10 @@ app.conf.update(
     enable_utc=True,
     result_serializer="json",
     task_serializer="json",
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
+    task_soft_time_limit=70,
+    task_time_limit=90,
     timezone="UTC",
+    worker_prefetch_multiplier=1,
 )
