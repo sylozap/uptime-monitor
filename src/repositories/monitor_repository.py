@@ -15,12 +15,10 @@ class MonitorRepository:
     async def create_monitor(
         self, user_id: uuid.UUID, monitor: MonitorCreate
     ) -> Monitor:
-
         db_monitor = Monitor(user_id=user_id, **monitor.model_dump(mode="json"))
 
         self.session.add(db_monitor)
-        await self.session.commit()
-        await self.session.refresh(db_monitor)
+        await self.session.flush()
 
         return db_monitor
 
@@ -54,10 +52,8 @@ class MonitorRepository:
         for key, value in update_data.items():
             setattr(monitor, key, value)
 
-        await self.session.commit()
-        await self.session.refresh(monitor)
+        await self.session.flush()
         return monitor
 
     async def delete_monitor(self, monitor: Monitor) -> None:
         await self.session.delete(monitor)
-        await self.session.commit()
