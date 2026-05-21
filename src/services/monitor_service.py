@@ -66,6 +66,13 @@ class MonitorService:
         if not update_data:
             return monitor
 
+        if "check_interval" in update_data or "is_active" in update_data:
+            update_data["next_check_at"] = (
+                datetime.now(UTC)
+                if update_data.get("is_active", monitor.is_active)
+                else None
+            )
+
         updated_monitor = await self.monitor_repository.update_monitor(
             monitor=monitor, update_data=update_data
         )
