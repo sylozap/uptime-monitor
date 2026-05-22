@@ -1,5 +1,14 @@
+from celery.signals import worker_process_init
+
 from celery import Celery
+from src.celery.loop import get_loop
 from src.core.config import settings
+
+
+@worker_process_init.connect
+def init_worker(**kwargs):
+    get_loop()
+
 
 app = Celery(
     "uptime-monitor",
@@ -13,7 +22,7 @@ app.conf.update(
     beat_schedule={
         "schedule-monitor-checks-every-minute": {
             "task": "src.celery.tasks.schedule_checks",
-            "schedule": 60.0,
+            "schedule": 10.0,
         },
     },
     enable_utc=True,
