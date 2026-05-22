@@ -34,6 +34,20 @@ services:
       - .env
     restart: unless-stopped
 
+  flower:
+    image: mher/flower:latest
+    container_name: flower
+    environment:
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - worker
+    env_file:
+      - .env
+
   postgres:
     image: postgres:17
     container_name: postgres_container
