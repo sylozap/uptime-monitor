@@ -46,6 +46,7 @@ class MonitorCheckService:
         )
 
         await self._save_check_result(monitor_config.id, result)
+        await self.session.commit()
 
     async def _get_monitor_check_config(
         self, monitor_id: uuid.UUID
