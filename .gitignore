@@ -13,3 +13,4 @@ wheels/
 .vscode
 .codex
 .env.test
+/redisdata

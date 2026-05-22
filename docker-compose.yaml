@@ -1,4 +1,53 @@
 services:
+  api:
+    build: .
+    container_name: fastapi_container
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "${API_HOST_PORT}:8000"
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  worker:
+    build: .
+    container_name: celery_worker
+    command: celery -A src.celery.app:app worker --loglevel=info
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  beat:
+    build: .
+    container_name: celery_beat
+    command: celery -A src.celery.app:app beat --loglevel=info
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  flower:
+    image: mher/flower:latest
+    container_name: flower
+    environment:
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - worker
+    env_file:
+      - .env
+
   postgres:
     image: postgres:17
     container_name: postgres_container
@@ -8,7 +57,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_HOST_PORT}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -18,5 +67,24 @@ services:
       retries: 5
     restart: unless-stopped
 
+  redis:
+    image: redis:8.6
+    container_name: redis_container
+    restart: unless-stopped
+    ports:
+      - "${REDIS_HOST_PORT}:6379"
+    volumes:
+      - ./redisdata:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 volumes:
   pgdata:
+  redisdata:

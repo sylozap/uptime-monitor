@@ -1,4 +1,5 @@
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import (
     InactiveUserError,
@@ -21,29 +22,38 @@ from src.schemas.user import UserCreate
 
 
 class AuthService:
-    def __init__(self, user_repository: UserRepository) -> None:
+    def __init__(self, session: AsyncSession, user_repository: UserRepository) -> None:
+        self.session = session
         self.user_repository = user_repository
 
     async def register_user(self, user: UserCreate) -> User:
         normalized_email = user.email.lower()
 
-        user_with_existing_email = await self.user_repository.get_by_email(
-            normalized_email
-        )
-
-        if user_with_existing_email:
-            raise UserAlreadyExistsError()
-
-        hashed_password = get_password_hash(user.password)
         try:
+            user_with_existing_email = await self.user_repository.get_by_email(
+                normalized_email
+            )
+
+            if user_with_existing_email:
+                raise UserAlreadyExistsError()
+
+            hashed_password = get_password_hash(user.password)
             new_user = await self.user_repository.create_user(
                 email=normalized_email,
                 hashed_password=hashed_password,
             )
+
+            await self.session.refresh(new_user)
+            await self.session.commit()
+            return new_user
+
         except IntegrityError as exc:
+            await self.session.rollback()
             raise UserAlreadyExistsError() from exc
 
-        return new_user
+        except Exception:
+            await self.session.rollback()
+            raise
 
     async def login_user(self, email: str, password: str) -> Token:
         normalized_email = email.lower()

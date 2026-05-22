@@ -1,4 +1,7 @@
 import uuid
+from datetime import UTC, datetime
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.exceptions import MonitorNotFoundError
 from src.models.monitor import Monitor
@@ -7,15 +10,23 @@ from src.schemas.monitor import MonitorCreate, MonitorFilterParams, MonitorUpdat
 
 
 class MonitorService:
-    def __init__(self, monitor_repository: MonitorRepository) -> None:
+    def __init__(
+        self, session: AsyncSession, monitor_repository: MonitorRepository
+    ) -> None:
+        self.session = session
         self.monitor_repository = monitor_repository
 
     async def create_monitor(
         self, user_id: uuid.UUID, monitor: MonitorCreate
     ) -> Monitor:
+
         new_monitor = await self.monitor_repository.create_monitor(
             user_id=user_id, monitor=monitor
         )
+        new_monitor.next_check_at = datetime.now(UTC)
+
+        await self.session.refresh(new_monitor)
+        await self.session.commit()
         return new_monitor
 
     async def get_monitors(
@@ -42,19 +53,41 @@ class MonitorService:
     async def update_monitor(
         self, id: uuid.UUID, user_id: uuid.UUID, fields_to_update: MonitorUpdate
     ) -> Monitor:
-        monitor = await self.get_monitor_by_id(id=id, user_id=user_id)
+
+        monitor = await self.monitor_repository.get_monitor_by_id(
+            id=id, user_id=user_id
+        )
+
+        if monitor is None:
+            raise MonitorNotFoundError()
+
         update_data = fields_to_update.model_dump(exclude_unset=True, mode="json")
 
         if not update_data:
             return monitor
 
+        if "check_interval" in update_data or "is_active" in update_data:
+            update_data["next_check_at"] = (
+                datetime.now(UTC)
+                if update_data.get("is_active", monitor.is_active)
+                else None
+            )
+
         updated_monitor = await self.monitor_repository.update_monitor(
             monitor=monitor, update_data=update_data
         )
 
+        await self.session.refresh(updated_monitor)
+        await self.session.commit()
         return updated_monitor
 
     async def delete_monitor(self, id: uuid.UUID, user_id: uuid.UUID) -> None:
-        monitor = await self.get_monitor_by_id(id=id, user_id=user_id)
+
+        monitor = await self.monitor_repository.get_monitor_by_id(
+            id=id, user_id=user_id
+        )
+
+        if monitor is None:
+            raise MonitorNotFoundError()
 
         await self.monitor_repository.delete_monitor(monitor=monitor)

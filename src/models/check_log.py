@@ -18,7 +18,7 @@ class CheckLog(Base):
         ForeignKey("monitors.id", ondelete="CASCADE"), nullable=False
     )
     response_time: Mapped[int] = mapped_column(nullable=False)
-    status_code: Mapped[int] = mapped_column()
+    status_code: Mapped[int] = mapped_column(nullable=True)
     is_available: Mapped[bool] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
