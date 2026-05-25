@@ -48,3 +48,8 @@ docker-compose.override.yml
 
 # Misc
 .codex/
+
+tests/
+Makefile
+.python-version
+README.md
