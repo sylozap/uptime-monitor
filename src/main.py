@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.api.router import api_router
 from src.core.exceptions import BaseAppError
@@ -7,6 +8,8 @@ from src.core.exceptions import BaseAppError
 app = FastAPI()
 
 app.include_router(api_router)
+
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 @app.exception_handler(BaseAppError)
