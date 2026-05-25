@@ -13,6 +13,7 @@ venv/
 .mypy_cache/
 .coverage
 htmlcov/
+.pre-commit-config.yaml
 
 # IDE
 .vscode/
@@ -47,3 +48,8 @@ docker-compose.override.yml
 
 # Misc
 .codex/
+
+tests/
+Makefile
+.python-version
+README.md

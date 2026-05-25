@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SentinelStatus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Base ──────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #07070e;
+    --surface:  #0e0e1c;
+    --card:     #11111f;
+    --border:   #1c1c32;
+    --border2:  #252542;
+    --text:     #d6d6f0;
+    --muted:    #4a4a78;
+    --muted2:   #6a6aa0;
+    --up:       #1bde7e;
+    --up-dim:   rgba(27,222,126,0.12);
+    --down:     #ff3366;
+    --down-dim: rgba(255,51,102,0.12);
+    --warn:     #ffaa22;
+    --warn-dim: rgba(255,170,34,0.12);
+    --accent:   #5b6ef5;
+    --accent2:  #7b8ef7;
+    --font:     'Syne', sans-serif;
+    --mono:     'JetBrains Mono', monospace;
+    --r:        6px;
+    --r2:       10px;
+    --shadow:   0 2px 20px rgba(0,0,0,0.5);
+  }
+
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Noise overlay ─────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: .4;
+  }
+
+  /* ── Typography ────────────────────────────────── */
+  h1, h2, h3 { font-weight: 800; letter-spacing: -0.02em; }
+  .mono { font-family: var(--mono); }
+
+  /* ── Scrollbar ─────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ── Buttons ───────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    border-radius: var(--r);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn-primary:not(:disabled):hover { background: var(--accent2); border-color: var(--accent2); transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted2);
+    border-color: var(--border2);
+  }
+  .btn-ghost:not(:disabled):hover { color: var(--text); border-color: var(--muted); }
+  .btn-danger {
+    background: transparent;
+    color: var(--down);
+    border-color: var(--down);
+  }
+  .btn-danger:not(:disabled):hover { background: var(--down-dim); transform: translateY(-1px); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-icon { padding: 6px; width: 30px; height: 30px; justify-content: center; }
+
+  /* ── Forms ─────────────────────────────────────── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.08em; }
+  .field input, .field select {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field input::placeholder { color: var(--muted); }
+  .field select option { background: var(--surface); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+  .toggle-row span { font-size: 13px; color: var(--text); font-weight: 600; }
+  .toggle {
+    position: relative; width: 40px; height: 22px; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+    background: var(--border2); border-radius: 11px; transition: background 0.2s;
+  }
+  .toggle:checked { background: var(--accent); }
+  .toggle::after {
+    content: ''; position: absolute; left: 3px; top: 3px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; transition: left 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,.4);
+  }
+  .toggle:checked::after { left: 21px; }
+  .error-msg { color: var(--down); font-size: 12px; font-family: var(--mono); margin-top: 4px; padding: 8px 10px; background: var(--down-dim); border-radius: var(--r); border: 1px solid rgba(255,51,102,.2); }
+
+  /* ── Auth Page ─────────────────────────────────── */
+  #page-auth {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+  }
+  .auth-glow {
+    position: fixed;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(91,110,245,0.08) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    pointer-events: none;
+  }
+  .auth-box {
+    width: 100%; max-width: 400px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 40px;
+    box-shadow: var(--shadow), 0 0 60px rgba(91,110,245,0.05);
+    position: relative;
+  }
+  .auth-logo {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 32px;
+  }
+  .auth-logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .auth-logo h1 { font-size: 20px; color: var(--text); }
+  .auth-tabs { display: flex; gap: 0; margin-bottom: 28px; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+  .auth-tab {
+    flex: 1; padding: 8px; border: none; background: transparent;
+    color: var(--muted2); font-family: var(--font); font-weight: 700;
+    font-size: 13px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.02em;
+  }
+  .auth-tab.active { background: var(--accent); color: #fff; }
+  .auth-form { display: flex; flex-direction: column; gap: 16px; }
+  .auth-form .btn-primary { margin-top: 4px; justify-content: center; padding: 11px; font-size: 14px; }
+
+  /* ── Topbar ────────────────────────────────────── */
+  #topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(7,7,14,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .topbar-logo { display: flex; align-items: center; gap: 8px; }
+  .topbar-logo-icon {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .topbar-logo span { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; color: var(--text); }
+  .topbar-sep { flex: 1; }
+  .topbar-user {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 10px 4px 4px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--muted2);
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+  .topbar-avatar {
+    width: 24px; height: 24px;
+    background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-family: var(--font);
+  }
+  .topbar-status { display: flex; align-items: center; gap: 6px; font-size: 12px; font-family: var(--mono); }
+
+  /* ── Dashboard Layout ──────────────────────────── */
+  #page-dashboard {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+  }
+  .dash-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .dash-title { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
+  .dash-title span { color: var(--accent2); }
+
+  /* ── Stats Bar ─────────────────────────────────── */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    transition: border-color 0.2s;
+  }
+  .stat-icon { font-size: 20px; }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+  .stat-value { font-size: 26px; font-weight: 800; font-family: var(--mono); line-height: 1; margin-top: 2px; }
+  .stat-up .stat-value { color: var(--up); }
+  .stat-down .stat-value { color: var(--down); }
+  .stat-total .stat-value { color: var(--accent2); }
+  .stat-warn .stat-value { color: var(--warn); }
+
+  /* ── Filter bar ────────────────────────────────── */
+  .filter-bar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  }
+  .filter-btn {
+    padding: 5px 14px; border-radius: 20px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted2); font-family: var(--font); font-weight: 700;
+    font-size: 12px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.02em;
+  }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-sep { flex: 1; }
+  .refresh-hint { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  #refresh-btn { padding: 5px 10px; }
+
+  /* ── Monitor Grid ──────────────────────────────── */
+  .monitor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px;
+  }
+
+  /* ── Monitor Card ──────────────────────────────── */
+  .monitor-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 20px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .monitor-card:hover { border-color: var(--border2); transform: translateY(-1px); box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+  .monitor-card.status-up { border-left: 3px solid var(--up); }
+  .monitor-card.status-down { border-left: 3px solid var(--down); }
+  .monitor-card.status-unknown { border-left: 3px solid var(--muted); }
+  .monitor-card.inactive { opacity: .55; }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+  .card-name-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .card-name { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+  .card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+  .status-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    position: relative;
+  }
+  .status-dot.up { background: var(--up); box-shadow: 0 0 8px var(--up); }
+  .status-dot.up::after {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    background: var(--up); opacity: 0;
+    animation: pulse-up 2s ease-out infinite;
+  }
+  .status-dot.down { background: var(--down); box-shadow: 0 0 8px var(--down); }
+  .status-dot.down::after {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    background: var(--down); opacity: 0;
+    animation: pulse-down 1.5s ease-out infinite;
+  }
+  .status-dot.unknown { background: var(--muted); }
+
+  @keyframes pulse-up {
+    0% { opacity: .5; transform: scale(1); }
+    100% { opacity: 0; transform: scale(2.5); }
+  }
+  @keyframes pulse-down {
+    0% { opacity: .6; transform: scale(1); }
+    50% { opacity: .4; }
+    100% { opacity: 0; transform: scale(2.5); }
+  }
+
+  .card-url {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 16px;
+  }
+
+  .card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card-meta-item { }
+  .meta-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 2px; }
+  .meta-value { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .meta-value.up { color: var(--up); }
+  .meta-value.down { color: var(--down); }
+
+  .card-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 700; font-family: var(--mono);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .badge-up { background: var(--up-dim); color: var(--up); }
+  .badge-down { background: var(--down-dim); color: var(--down); }
+  .badge-unknown { background: rgba(100,100,150,.15); color: var(--muted2); }
+  .badge-inactive { background: rgba(100,100,150,.1); color: var(--muted); }
+
+  /* ── Empty State ───────────────────────────────── */
+  .empty-state {
+    grid-column: 1/-1;
+    text-align: center; padding: 80px 20px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: .4; }
+  .empty-state h3 { font-size: 18px; color: var(--muted2); margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; max-width: 300px; margin: 0 auto 20px; }
+
+  /* ── Loading ───────────────────────────────────── */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-state {
+    grid-column: 1/-1;
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; padding: 60px;
+    color: var(--muted2);
+  }
+
+  /* ── Modal Overlay ─────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(4,4,10,0.75);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    animation: fade-in 0.15s ease;
+  }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--r2);
+    width: 100%; max-width: 480px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.7);
+    animation: modal-in 0.2s ease;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-size: 16px; font-weight: 800; }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted2); font-size: 18px; line-height: 1;
+    transition: color 0.15s; padding: 2px;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+
+  /* ── Drawer (right side panel) ─────────────────── */
+  .drawer-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(4,4,10,0.6);
+    backdrop-filter: blur(4px);
+    animation: fade-in 0.15s ease;
+  }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 201;
+    width: 100%; max-width: 480px;
+    background: var(--surface);
+    border-left: 1px solid var(--border2);
+    box-shadow: -8px 0 40px rgba(0,0,0,.5);
+    overflow-y: auto;
+    animation: drawer-in 0.25s ease;
+    display: flex; flex-direction: column;
+  }
+  @keyframes drawer-in {
+    from { transform: translateX(100%); }
+    to { transform: none; }
+  }
+  .drawer-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
+  }
+  .drawer-header .status-dot { width: 12px; height: 12px; }
+  .drawer-title { font-size: 18px; font-weight: 800; flex: 1; }
+  .drawer-body { padding: 24px; flex: 1; }
+  .drawer-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; bottom: 0; background: var(--surface);
+  }
+
+  /* ── Tabs ──────────────────────────────────────── */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .tab-btn {
+    padding: 8px 16px; background: none; border: none;
+    color: var(--muted2); font-family: var(--font); font-weight: 700;
+    font-size: 13px; cursor: pointer; transition: all 0.15s;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    letter-spacing: 0.02em;
+  }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  /* ── Detail sections ───────────────────────────── */
+  .detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-bottom: 24px;
+  }
+  .detail-item { }
+  .detail-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 4px; }
+  .detail-value { font-family: var(--mono); font-size: 13px; word-break: break-all; }
+  .detail-value.accent { color: var(--accent2); }
+  .detail-value.full { grid-column: 1/-1; }
+
+  /* ── Not-yet notice ────────────────────────────── */
+  .not-yet {
+    background: var(--card);
+    border: 1px dashed var(--border2);
+    border-radius: var(--r2);
+    padding: 24px;
+    text-align: center;
+  }
+  .not-yet-icon { font-size: 28px; margin-bottom: 10px; }
+  .not-yet h4 { font-size: 14px; color: var(--text); margin-bottom: 6px; }
+  .not-yet p { font-size: 12px; color: var(--muted2); line-height: 1.6; }
+  .not-yet code {
+    font-family: var(--mono); font-size: 11px;
+    background: rgba(91,110,245,.15); color: var(--accent2);
+    padding: 1px 5px; border-radius: 3px;
+  }
+  .not-yet .tag {
+    display: inline-block; margin-top: 8px;
+    background: var(--warn-dim); color: var(--warn);
+    font-size: 10px; font-weight: 700; font-family: var(--mono);
+    padding: 2px 8px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+
+  /* ── Toast ─────────────────────────────────────── */
+  #toast-container {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+  }
+  .toast {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 10px 16px;
+    font-size: 13px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.5);
+    animation: toast-in 0.2s ease;
+    max-width: 320px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.success { border-left: 3px solid var(--up); }
+  .toast.error { border-left: 3px solid var(--down); }
+  @keyframes toast-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+
+  /* ── Confirm modal (delete) ────────────────────── */
+  .confirm-body { padding: 24px; }
+  .confirm-body h3 { font-size: 16px; margin-bottom: 8px; }
+  .confirm-body p { font-size: 13px; color: var(--muted2); line-height: 1.6; }
+
+  /* ── Misc Utilities ────────────────────────────── */
+  .hidden { display: none !important; }
+  .tag-inactive {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(100,100,150,.1); color: var(--muted);
+    font-size: 10px; font-weight: 700; font-family: var(--mono);
+    padding: 2px 7px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .section-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* ── Connection status indicator ──────────────── */
+  .conn-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+  .conn-dot.ok { background: var(--up); }
+  .conn-dot.err { background: var(--down); }
+
+  @media (max-width: 680px) {
+    .stats-bar { grid-template-columns: 1fr 1fr; }
+    .monitor-grid { grid-template-columns: 1fr; }
+    .dash-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    #topbar { padding: 0 16px; }
+    #page-dashboard { padding: 20px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Auth Page ──────────────────────────────────── -->
+<div id="page-auth" class="hidden">
+  <div class="auth-glow"></div>
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">⬡</div>
+      <h1>SentinelStatus</h1>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="setAuthMode('login')">Sign In</button>
+      <button class="auth-tab" id="tab-register" onclick="setAuthMode('register')">Register</button>
+    </div>
+    <div class="auth-form">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div id="auth-error" class="error-msg hidden"></div>
+      <button class="btn btn-primary" id="auth-btn" onclick="submitAuth()">
+        <span id="auth-btn-text">Sign In</span>
+        <span id="auth-spinner" class="spinner hidden" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:#fff;"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Dashboard ─────────────────────────────────── -->
+<div id="page-dashboard" class="hidden">
+  <!-- Topbar -->
+  <div id="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">⬡</div>
+      <span>SentinelStatus</span>
+    </div>
+    <div class="topbar-status">
+      <div class="conn-dot" id="conn-dot"></div>
+      <span id="conn-label" style="color:var(--muted);font-size:11px;">connecting…</span>
+    </div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-user">
+      <div class="topbar-avatar" id="user-avatar">?</div>
+      <span id="user-email-label" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">…</span>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>
+  </div>
+
+  <!-- Content -->
+  <div style="max-width:1200px;margin:0 auto;padding:32px 28px 60px;" id="dash-content">
+    <div class="dash-header">
+      <h2 class="dash-title">Monitors <span id="monitor-count-title"></span></h2>
+      <button class="btn btn-primary" onclick="openCreate()">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Add Monitor
+      </button>
+    </div>
+
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-card stat-total">
+        <div class="stat-icon">📡</div>
+        <div>
+          <div class="stat-label">Total</div>
+          <div class="stat-value" id="stat-total">—</div>
+        </div>
+      </div>
+      <div class="stat-card stat-up">
+        <div class="stat-icon">✅</div>
+        <div>
+          <div class="stat-label">Online</div>
+          <div class="stat-value" id="stat-up">—</div>
+        </div>
+      </div>
+      <div class="stat-card stat-down">
+        <div class="stat-icon">🔴</div>
+        <div>
+          <div class="stat-label">Down</div>
+          <div class="stat-value" id="stat-down">—</div>
+        </div>
+      </div>
+      <div class="stat-card stat-warn">
+        <div class="stat-icon">⏳</div>
+        <div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-value" id="stat-pending">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" data-filter="up" onclick="setFilter('up', this)">Online</button>
+      <button class="filter-btn" data-filter="down" onclick="setFilter('down', this)">Down</button>
+      <button class="filter-btn" data-filter="inactive" onclick="setFilter('inactive', this)">Inactive</button>
+      <div class="filter-sep"></div>
+      <span class="refresh-hint" id="last-refresh-label"></span>
+      <button class="btn btn-ghost btn-sm" id="refresh-btn" onclick="loadMonitors()">↻ Refresh</button>
+    </div>
+
+    <div class="monitor-grid" id="monitor-grid">
+      <div class="loading-state"><div class="spinner"></div> Loading monitors…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Monitor Drawer ─────────────────────────────── -->
+<div class="drawer-overlay hidden" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer hidden" id="drawer">
+  <div class="drawer-header">
+    <div class="status-dot unknown" id="drawer-dot"></div>
+    <div class="drawer-title" id="drawer-title">Monitor</div>
+    <div id="drawer-badge"></div>
+    <button class="btn btn-ghost btn-sm btn-icon" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="setDrawerTab('info', this)">Info</button>
+      <button class="tab-btn" onclick="setDrawerTab('logs', this)">Logs</button>
+      <button class="tab-btn" onclick="setDrawerTab('incidents', this)">Incidents</button>
+    </div>
+    <!-- Info tab -->
+    <div id="tab-info">
+      <div class="detail-grid" id="drawer-info-grid"></div>
+      <hr class="divider">
+      <div class="section-title">Configuration</div>
+      <div class="detail-grid" id="drawer-config-grid"></div>
+    </div>
+    <!-- Logs tab -->
+    <div id="tab-logs" class="hidden">
+      <div class="not-yet">
+        <div class="not-yet-icon">📊</div>
+        <h4>Check Logs</h4>
+        <p>This section will display the last 50 check history entries with response times and status codes.</p>
+        <p style="margin-top:8px;">Requires backend endpoint:<br><code>GET /api/v1/monitors/{'{id}'}/logs</code></p>
+        <div class="tag">🛠 Этап 5 — Redis &amp; Logs API</div>
+      </div>
+    </div>
+    <!-- Incidents tab -->
+    <div id="tab-incidents" class="hidden">
+      <div class="not-yet">
+        <div class="not-yet-icon">⚠️</div>
+        <h4>Incident History</h4>
+        <p>This section will show all downtime incidents with start/end times and error details.</p>
+        <p style="margin-top:8px;">Requires backend endpoint:<br><code>GET /api/v1/monitors/{'{id}'}/incidents</code></p>
+        <div class="tag">🛠 Этап 4 — Worker &amp; Incidents</div>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-footer">
+    <button class="btn btn-danger btn-sm" onclick="confirmDelete(currentMonitor)">🗑 Delete</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="closeDrawer()">Close</button>
+      <button class="btn btn-primary btn-sm" onclick="openEdit(currentMonitor)">✏ Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create / Edit Modal ────────────────────────── -->
+<div class="modal-overlay hidden" id="monitor-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Add Monitor</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="m-name" placeholder="My Website">
+      </div>
+      <div class="field">
+        <label>URL</label>
+        <input type="url" id="m-url" placeholder="https://example.com">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field">
+          <label>Check Interval</label>
+          <select id="m-interval">
+            <option value="30">30 seconds</option>
+            <option value="60" selected>1 minute</option>
+            <option value="180">3 minutes</option>
+            <option value="300">5 minutes</option>
+            <option value="600">10 minutes</option>
+            <option value="900">15 minutes</option>
+            <option value="1800">30 minutes</option>
+            <option value="3600">1 hour</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Timeout (sec)</label>
+          <input type="number" id="m-timeout" value="10" min="1" max="60">
+        </div>
+      </div>
+      <div class="field">
+        <label>Expected HTTP Status</label>
+        <input type="number" id="m-status" value="200" min="100" max="599">
+      </div>
+      <div class="toggle-row">
+        <span>Active</span>
+        <input type="checkbox" class="toggle" id="m-active" checked>
+      </div>
+      <div class="error-msg hidden" id="modal-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn" onclick="saveMonitor()">
+        <span id="modal-save-text">Create</span>
+        <span id="modal-spinner" class="spinner hidden" style="width:12px;height:12px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:#fff;"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Confirm Modal ───────────────────────── -->
+<div class="modal-overlay hidden" id="confirm-modal">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-header">
+      <span class="modal-title">Delete Monitor</span>
+      <button class="modal-close" onclick="closeConfirm()">✕</button>
+    </div>
+    <div class="confirm-body">
+      <h3>Are you sure?</h3>
+      <p id="confirm-text" style="margin-top:8px;">This will permanently delete this monitor and all its data.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok" onclick="doDelete()">
+        <span id="confirm-text-btn">Delete</span>
+        <span id="confirm-spinner" class="spinner hidden" style="width:12px;height:12px;border-width:2px;border-color:rgba(255,51,102,.3);border-top-color:var(--down);"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast Container ────────────────────────────── -->
+<div id="toast-container"></div>
+
+<script>
+// ══ Configuration ══════════════════════════════════════════════════════════
+const API = '/api/v1';   // ← change if needed
+const REFRESH_INTERVAL_MS = 30_000;           // auto-refresh every 30s
+
+// ══ State ══════════════════════════════════════════════════════════════════
+let accessToken = localStorage.getItem('access_token') || null;
+let refreshToken = localStorage.getItem('refresh_token') || null;
+let currentUser = null;
+let monitors = [];
+let currentMonitor = null;
+let monitorToDelete = null;
+let editingMonitorId = null;
+let currentFilter = 'all';
+let refreshTimer = null;
+let authMode = 'login';
+
+// ══ API Helpers ═════════════════════════════════════════════════════════════
+async function apiFetch(path, options = {}, _retry = true) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+  const res = await fetch(`${API}${path}`, { ...options, headers });
+
+  if (res.status === 401 && _retry && refreshToken) {
+    const refreshed = await tryRefreshToken();
+    if (refreshed) return apiFetch(path, options, false);
+    logout(); return null;
+  }
+
+  return res;
+}
+
+async function tryRefreshToken() {
+  try {
+    const res = await fetch(`${API}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    setTokens(data.access_token, data.refresh_token);
+    return true;
+  } catch { return false; }
+}
+
+function setTokens(at, rt) {
+  accessToken = at;
+  refreshToken = rt;
+  localStorage.setItem('access_token', at);
+  localStorage.setItem('refresh_token', rt);
+}
+
+function clearTokens() {
+  accessToken = null;
+  refreshToken = null;
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+}
+
+async function apiJson(path, options = {}) {
+  const res = await apiFetch(path, options);
+  if (!res) return null;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// ══ Auth ════════════════════════════════════════════════════════════════════
+function setAuthMode(mode) {
+  authMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+  document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+  document.getElementById('auth-btn-text').textContent = mode === 'login' ? 'Sign In' : 'Create Account';
+  document.getElementById('auth-error').classList.add('hidden');
+  document.getElementById('auth-password').autocomplete = mode === 'login' ? 'current-password' : 'new-password';
+}
+
+async function submitAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-btn');
+  const spinner = document.getElementById('auth-spinner');
+
+  errEl.classList.add('hidden');
+  if (!email || !password) { showAuthError('Email and password are required.'); return; }
+
+  btn.disabled = true;
+  spinner.classList.remove('hidden');
+
+  try {
+    if (authMode === 'register') {
+      await apiJson('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      // Auto-login after register
+    }
+
+    // Login (form-encoded as required by OAuth2PasswordRequestForm)
+    const formBody = new URLSearchParams({ username: email, password });
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formBody.toString(),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Invalid credentials');
+    }
+    const data = await res.json();
+    setTokens(data.access_token, data.refresh_token);
+    await initDashboard();
+  } catch (e) {
+    showAuthError(e.message);
+  } finally {
+    btn.disabled = false;
+    spinner.classList.add('hidden');
+  }
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function logout() {
+  clearTokens();
+  currentUser = null;
+  monitors = [];
+  if (refreshTimer) clearInterval(refreshTimer);
+  showPage('auth');
+}
+
+// ══ Initialisation ══════════════════════════════════════════════════════════
+async function init() {
+  if (accessToken) {
+    try {
+      currentUser = await apiJson('/auth/me');
+      if (currentUser) { await initDashboard(); return; }
+    } catch {}
+  }
+  showPage('auth');
+}
+
+async function initDashboard() {
+  currentUser = await apiJson('/auth/me');
+  if (!currentUser) { showPage('auth'); return; }
+
+  // Update topbar
+  const email = currentUser.email;
+  document.getElementById('user-email-label').textContent = email;
+  document.getElementById('user-avatar').textContent = email[0].toUpperCase();
+
+  showPage('dashboard');
+  await loadMonitors();
+
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => loadMonitors(true), REFRESH_INTERVAL_MS);
+}
+
+// ══ Monitors ════════════════════════════════════════════════════════════════
+async function loadMonitors(silent = false) {
+  const grid = document.getElementById('monitor-grid');
+  if (!silent) grid.innerHTML = '<div class="loading-state"><div class="spinner"></div> Loading monitors…</div>';
+
+  setConnStatus('connecting');
+
+  try {
+    // Fetch all (up to 100) — no pagination UI for now
+    const data = await apiJson('/monitors/?limit=100&offset=0');
+    monitors = data || [];
+    setConnStatus('ok');
+    renderMonitors();
+    updateStats();
+    document.getElementById('last-refresh-label').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+  } catch (e) {
+    setConnStatus('err');
+    if (!silent) grid.innerHTML = `<div class="loading-state" style="flex-direction:column;gap:8px;">
+      <span style="font-size:24px">⚠️</span>
+      <span style="color:var(--muted2)">Could not load monitors</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${e.message}</span>
+    </div>`;
+  }
+}
+
+function setConnStatus(state) {
+  const dot = document.getElementById('conn-dot');
+  const label = document.getElementById('conn-label');
+  dot.className = 'conn-dot' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
+  label.textContent = state === 'ok' ? 'API connected' : state === 'err' ? 'API unreachable' : 'connecting…';
+  label.style.color = state === 'ok' ? 'var(--up)' : state === 'err' ? 'var(--down)' : 'var(--muted)';
+}
+
+function renderMonitors() {
+  const grid = document.getElementById('monitor-grid');
+  const filtered = filterMonitors(monitors);
+
+  if (filtered.length === 0) {
+    if (monitors.length === 0) {
+      grid.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">📡</div>
+        <h3>No monitors yet</h3>
+        <p>Add your first URL to start tracking uptime.</p>
+        <button class="btn btn-primary" onclick="openCreate()">Add Monitor</button>
+      </div>`;
+    } else {
+      grid.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No results for this filter</h3>
+        <p><button class="btn btn-ghost btn-sm" onclick="setFilter('all', document.querySelector('[data-filter=all]'))">Show all</button></p>
+      </div>`;
+    }
+    return;
+  }
+
+  grid.innerHTML = filtered.map(m => monitorCard(m)).join('');
+  document.getElementById('monitor-count-title').textContent = `(${monitors.length})`;
+}
+
+function filterMonitors(list) {
+  if (currentFilter === 'all') return list;
+  if (currentFilter === 'up') return list.filter(m => m.is_active && m.last_status === true);
+  if (currentFilter === 'down') return list.filter(m => m.is_active && m.last_status === false);
+  if (currentFilter === 'inactive') return list.filter(m => !m.is_active);
+  return list;
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderMonitors();
+}
+
+function monitorCard(m) {
+  const status = !m.is_active ? 'inactive' : m.last_status === true ? 'up' : m.last_status === false ? 'down' : 'unknown';
+  const dotClass = !m.is_active ? 'unknown' : status;
+
+  const badgeHtml = !m.is_active
+    ? `<span class="card-badge badge-inactive">Paused</span>`
+    : status === 'up'
+    ? `<span class="card-badge badge-up">● UP</span>`
+    : status === 'down'
+    ? `<span class="card-badge badge-down">● DOWN</span>`
+    : `<span class="card-badge badge-unknown">● Pending</span>`;
+
+  const lastChecked = m.last_checked_at
+    ? timeAgo(new Date(m.last_checked_at))
+    : '—';
+
+  const responseTime = m.last_checked_at && m.last_status !== null
+    ? '—' // response time not in monitor response, only in logs
+    : '—';
+
+  const nextCheck = m.next_check_at && m.is_active
+    ? timeFromNow(new Date(m.next_check_at))
+    : '—';
+
+  const statusCode = m.last_status_code !== null && m.last_status_code !== undefined
+    ? `<span class="${statusCodeColor(m.last_status_code)}">${m.last_status_code}</span>`
+    : '—';
+
+  const interval = intervalLabel(m.check_interval);
+
+  return `<div class="monitor-card status-${status}${!m.is_active ? ' inactive' : ''}" onclick="openDrawer('${m.id}')">
+    <div class="card-top">
+      <div class="card-name-row">
+        <div class="status-dot ${dotClass}"></div>
+        <span class="card-name" title="${escHtml(m.name)}">${escHtml(m.name)}</span>
+      </div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        ${badgeHtml}
+        <button class="btn btn-ghost btn-sm btn-icon" title="Edit" onclick="openEdit(${JSON.stringify(m).replace(/"/g,'&quot;')})">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="card-url" title="${escHtml(String(m.url))}">${escHtml(String(m.url))}</div>
+    <div class="card-meta">
+      <div class="card-meta-item">
+        <div class="meta-label">Last checked</div>
+        <div class="meta-value">${lastChecked}</div>
+      </div>
+      <div class="card-meta-item">
+        <div class="meta-label">Status code</div>
+        <div class="meta-value">${statusCode}</div>
+      </div>
+      <div class="card-meta-item">
+        <div class="meta-label">Interval</div>
+        <div class="meta-value">${interval}</div>
+      </div>
+      <div class="card-meta-item">
+        <div class="meta-label">Next check</div>
+        <div class="meta-value">${nextCheck}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function updateStats() {
+  const total = monitors.length;
+  const up = monitors.filter(m => m.is_active && m.last_status === true).length;
+  const down = monitors.filter(m => m.is_active && m.last_status === false).length;
+  const pending = monitors.filter(m => m.is_active && m.last_status === null).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-up').textContent = up;
+  document.getElementById('stat-down').textContent = down;
+  document.getElementById('stat-pending').textContent = pending;
+}
+
+// ══ Drawer ══════════════════════════════════════════════════════════════════
+function openDrawer(id) {
+  const m = monitors.find(x => x.id === id);
+  if (!m) return;
+  currentMonitor = m;
+
+  // Status
+  const status = !m.is_active ? 'unknown' : m.last_status === true ? 'up' : m.last_status === false ? 'down' : 'unknown';
+  document.getElementById('drawer-dot').className = `status-dot ${status}`;
+  document.getElementById('drawer-title').textContent = m.name;
+
+  const badgeHtml = !m.is_active
+    ? `<span class="badge-inactive tag-inactive">Paused</span>`
+    : status === 'up' ? `<span class="card-badge badge-up">UP</span>`
+    : status === 'down' ? `<span class="card-badge badge-down">DOWN</span>`
+    : `<span class="card-badge badge-unknown">Pending</span>`;
+  document.getElementById('drawer-badge').innerHTML = badgeHtml;
+
+  // Info grid
+  document.getElementById('drawer-info-grid').innerHTML = `
+    <div class="detail-item">
+      <div class="detail-label">Last Status</div>
+      <div class="detail-value ${status === 'up' ? 'up' : status === 'down' ? 'down' : ''}" style="color:${status === 'up' ? 'var(--up)' : status === 'down' ? 'var(--down)' : 'var(--muted2)'}">
+        ${status === 'up' ? '✓ Operational' : status === 'down' ? '✗ Down' : 'No data yet'}
+      </div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Status Code</div>
+      <div class="detail-value">${m.last_status_code ?? '—'}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Last Checked</div>
+      <div class="detail-value">${m.last_checked_at ? new Date(m.last_checked_at).toLocaleString() : '—'}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Next Check</div>
+      <div class="detail-value">${m.next_check_at && m.is_active ? new Date(m.next_check_at).toLocaleString() : '—'}</div>
+    </div>
+    <div class="detail-item" style="grid-column:1/-1">
+      <div class="detail-label">URL</div>
+      <div class="detail-value accent">${escHtml(String(m.url))}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Created</div>
+      <div class="detail-value">${new Date(m.created_at).toLocaleDateString()}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Monitor ID</div>
+      <div class="detail-value" style="font-size:10px;color:var(--muted)">${m.id}</div>
+    </div>
+  `;
+
+  document.getElementById('drawer-config-grid').innerHTML = `
+    <div class="detail-item">
+      <div class="detail-label">Check Interval</div>
+      <div class="detail-value">${intervalLabel(m.check_interval)}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Timeout</div>
+      <div class="detail-value">${m.timeout}s</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Expected Status</div>
+      <div class="detail-value">${m.expected_status}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Active</div>
+      <div class="detail-value" style="color:${m.is_active ? 'var(--up)' : 'var(--muted)'}">
+        ${m.is_active ? '● Enabled' : '○ Paused'}
+      </div>
+    </div>
+  `;
+
+  // Reset to info tab
+  setDrawerTab('info', document.querySelector('.tab-btn'));
+
+  document.getElementById('drawer-overlay').classList.remove('hidden');
+  document.getElementById('drawer').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer() {
+  document.getElementById('drawer-overlay').classList.add('hidden');
+  document.getElementById('drawer').classList.add('hidden');
+  document.body.style.overflow = '';
+  currentMonitor = null;
+}
+
+function setDrawerTab(tab, el) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('tab-info').classList.toggle('hidden', tab !== 'info');
+  document.getElementById('tab-logs').classList.toggle('hidden', tab !== 'logs');
+  document.getElementById('tab-incidents').classList.toggle('hidden', tab !== 'incidents');
+}
+
+// ══ Create / Edit Modal ═════════════════════════════════════════════════════
+function openCreate() {
+  editingMonitorId = null;
+  document.getElementById('modal-title').textContent = 'Add Monitor';
+  document.getElementById('modal-save-text').textContent = 'Create';
+  document.getElementById('m-name').value = '';
+  document.getElementById('m-url').value = '';
+  document.getElementById('m-interval').value = '60';
+  document.getElementById('m-timeout').value = '10';
+  document.getElementById('m-status').value = '200';
+  document.getElementById('m-active').checked = true;
+  document.getElementById('modal-error').classList.add('hidden');
+  document.getElementById('monitor-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('m-name').focus(), 50);
+}
+
+function openEdit(m) {
+  // m can come from card onclick (JSON) or from drawer button (object)
+  const monitor = typeof m === 'string' ? JSON.parse(m) : m;
+  editingMonitorId = monitor.id;
+  document.getElementById('modal-title').textContent = 'Edit Monitor';
+  document.getElementById('modal-save-text').textContent = 'Save';
+  document.getElementById('m-name').value = monitor.name;
+  document.getElementById('m-url').value = String(monitor.url);
+  document.getElementById('m-interval').value = String(monitor.check_interval);
+  document.getElementById('m-timeout').value = String(monitor.timeout);
+  document.getElementById('m-status').value = String(monitor.expected_status);
+  document.getElementById('m-active').checked = monitor.is_active;
+  document.getElementById('modal-error').classList.add('hidden');
+  closeDrawer();
+  document.getElementById('monitor-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('m-name').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('monitor-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+async function saveMonitor() {
+  const name = document.getElementById('m-name').value.trim();
+  const url = document.getElementById('m-url').value.trim();
+  const interval = parseInt(document.getElementById('m-interval').value);
+  const timeout = parseInt(document.getElementById('m-timeout').value);
+  const expected = parseInt(document.getElementById('m-status').value);
+  const active = document.getElementById('m-active').checked;
+  const errEl = document.getElementById('modal-error');
+
+  errEl.classList.add('hidden');
+  if (!name) { showModalError('Name is required.'); return; }
+  if (!url) { showModalError('URL is required.'); return; }
+  if (!/^https?:\/\/.+/.test(url)) { showModalError('URL must start with http:// or https://'); return; }
+
+  const btn = document.getElementById('modal-save-btn');
+  const spinner = document.getElementById('modal-spinner');
+  btn.disabled = true;
+  spinner.classList.remove('hidden');
+
+  const body = { name, url, check_interval: interval, timeout, expected_status: expected, is_active: active };
+
+  try {
+    if (editingMonitorId) {
+      await apiJson(`/monitors/${editingMonitorId}`, { method: 'PATCH', body: JSON.stringify(body) });
+      showToast('Monitor updated', 'success');
+    } else {
+      await apiJson('/monitors/', { method: 'POST', body: JSON.stringify(body) });
+      showToast('Monitor created', 'success');
+    }
+    closeModal();
+    await loadMonitors();
+  } catch (e) {
+    showModalError(e.message);
+  } finally {
+    btn.disabled = false;
+    spinner.classList.add('hidden');
+  }
+}
+
+function showModalError(msg) {
+  const el = document.getElementById('modal-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+// ══ Delete ══════════════════════════════════════════════════════════════════
+function confirmDelete(m) {
+  if (!m) return;
+  monitorToDelete = m;
+  document.getElementById('confirm-text').textContent =
+    `This will permanently delete "${m.name}" and all its check logs and incidents.`;
+  document.getElementById('confirm-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+  monitorToDelete = null;
+}
+
+async function doDelete() {
+  if (!monitorToDelete) return;
+  const btn = document.getElementById('confirm-ok');
+  const spinner = document.getElementById('confirm-spinner');
+  btn.disabled = true;
+  spinner.classList.remove('hidden');
+
+  try {
+    await apiJson(`/monitors/${monitorToDelete.id}`, { method: 'DELETE' });
+    showToast(`"${monitorToDelete.name}" deleted`, 'success');
+    closeConfirm();
+    closeDrawer();
+    await loadMonitors();
+  } catch (e) {
+    showToast(`Delete failed: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    spinner.classList.add('hidden');
+  }
+}
+
+// ══ Toast ════════════════════════════════════════════════════════════════════
+function showToast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type === 'success' ? '✓' : '✗'}</span><span>${escHtml(msg)}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ══ Page switching ══════════════════════════════════════════════════════════
+function showPage(page) {
+  document.getElementById('page-auth').classList.toggle('hidden', page !== 'auth');
+  document.getElementById('page-dashboard').classList.toggle('hidden', page !== 'dashboard');
+}
+
+// ══ Keyboard shortcuts ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeConfirm();
+    closeModal();
+    closeDrawer();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (!document.getElementById('monitor-modal').classList.contains('hidden')) saveMonitor();
+    else if (!document.getElementById('page-auth').classList.contains('hidden')) submitAuth();
+  }
+});
+document.getElementById('auth-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitAuth();
+});
+document.getElementById('auth-email').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('auth-password').focus();
+});
+
+// ══ Utilities ════════════════════════════════════════════════════════════════
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function timeAgo(date) {
+  const s = Math.round((Date.now() - date) / 1000);
+  if (s < 5) return 'just now';
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.round(s/60)}m ago`;
+  if (s < 86400) return `${Math.round(s/3600)}h ago`;
+  return `${Math.round(s/86400)}d ago`;
+}
+
+function timeFromNow(date) {
+  const s = Math.round((date - Date.now()) / 1000);
+  if (s <= 0) return 'soon';
+  if (s < 60) return `in ${s}s`;
+  if (s < 3600) return `in ${Math.round(s/60)}m`;
+  return `in ${Math.round(s/3600)}h`;
+}
+
+function intervalLabel(sec) {
+  if (sec < 60) return `${sec}s`;
+  if (sec < 3600) return `${Math.round(sec/60)}m`;
+  return `${Math.round(sec/3600)}h`;
+}
+
+function statusCodeColor(code) {
+  if (code >= 200 && code < 300) return 'meta-value up';
+  if (code >= 400) return 'meta-value down';
+  return 'meta-value';
+}
+
+
+// ══ Boot ═════════════════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
